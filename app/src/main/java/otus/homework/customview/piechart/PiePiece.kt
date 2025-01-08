@@ -7,18 +7,24 @@ import androidx.annotation.ColorInt
 data class PiePiece(
     val name: String,
     @ColorInt val color: Int,
-    val angle: Float,
+    val startAngle: Float,
+    val sweepAngle: Float,
 ): Parcelable {
+    val endAngle = startAngle + sweepAngle
+    val anglesRange = startAngle..endAngle
+
     constructor(parcel: Parcel) : this(
         parcel.readString().orEmpty(),
         parcel.readInt(),
-        parcel.readFloat()
+        parcel.readFloat(),
+        parcel.readFloat(),
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(name)
         parcel.writeInt(color)
-        parcel.writeFloat(angle)
+        parcel.writeFloat(startAngle)
+        parcel.writeFloat(sweepAngle)
     }
 
     override fun describeContents(): Int {

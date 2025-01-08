@@ -5,7 +5,7 @@ import org.json.JSONArray
 import otus.homework.customview.piechart.Piece
 import java.io.BufferedReader
 
-class DemoValuesReader {
+object DemoValuesReader {
 
     fun readPieChartValues(context: Context): List<Piece> {
         val payloads = context.readPayloads()

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "otus.homework.customview"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "otus.homework.customview"
