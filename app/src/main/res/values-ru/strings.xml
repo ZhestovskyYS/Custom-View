@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Custom View</string>
+    <string name="others_placeholder">Прочие</string>
+</resources>
