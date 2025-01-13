@@ -5,7 +5,6 @@ import android.graphics.Color
 import otus.homework.customview.R
 
 private const val MAX_ANGLE = 360.0f
-private val COLOR_SPEC_RANGE = 0..255
 private val OTHERS_PLACEHOLDER = R.string.others_placeholder
 
 class Count(
@@ -17,7 +16,7 @@ class Count(
         require(thresholdPercent < 1.0f && startAngle in -360.0f..360.0f)
     }
 
-    operator fun invoke(context: Context, pieces: List<Piece>): List<PiePiece> {
+    operator fun invoke(context: Context, pieces: List<Piece>, colors: List<Int>): List<PiePiece> {
         val (min, max, sum) = readPiecesStats(pieces)
         if (sum == 0.0) return emptyList()
 
@@ -29,10 +28,9 @@ class Count(
             val meaningPieces = pieces - othersThreshold.toSet()
             val sortedMeaningPieces = meaningPieces.sortedByDescending { it.weight }
             if (meaningPieces.isEmpty())
-                return mapAllPieces(sortedMeaningPieces, sum)
+                return mapAllPieces(sortedMeaningPieces, colors, sum)
 
-            val meaningPiecesColors = generateColors(meaningPieces.size)
-            val meaningPiePieces = sortedMeaningPieces.toPiePieces(meaningPiecesColors, sum)
+            val meaningPiePieces = sortedMeaningPieces.toPiePieces(colors, sum)
             val othersPiece = PiePiece(
                 name = thresholdPlaceholder ?: context.getString(OTHERS_PLACEHOLDER),
                 color = Color.GRAY,
@@ -42,15 +40,14 @@ class Count(
 
             return meaningPiePieces + othersPiece
         } else {
-            return mapAllPieces(pieces, sum)
+            return mapAllPieces(pieces, colors, sum)
         }
     }
 
 
-    private fun mapAllPieces(pieces: List<Piece>, sum: Double): List<PiePiece> {
+    private fun mapAllPieces(pieces: List<Piece>, colors: List<Int>, sum: Double): List<PiePiece> {
         pieces.ifEmpty { return emptyList() }
 
-        val colors = generateColors(pieces.size)
         val piecesWithoutLastOne = pieces - pieces.last()
         return piecesWithoutLastOne.toPiePieces(colors, sum)
             .let {
@@ -90,21 +87,6 @@ class Count(
 
     private fun countPieceAngle(pieceWeight: Float, sum: Double) =
         ((pieceWeight / sum) * MAX_ANGLE).toFloat()
-
-
-    private fun generateColors(number: Int): List<Int> {
-        val colors = mutableListOf<Int>()
-        while (colors.size < number) {
-            colors.add(
-                Color.rgb(
-                    COLOR_SPEC_RANGE.random(),
-                    COLOR_SPEC_RANGE.random(),
-                    COLOR_SPEC_RANGE.random(),
-                )
-            )
-        }
-        return colors
-    }
 
     private data class PiecesStats(
         val minValue: Float,

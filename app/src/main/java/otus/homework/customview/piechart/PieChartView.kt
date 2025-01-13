@@ -2,6 +2,7 @@ package otus.homework.customview.piechart
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Path
 import android.graphics.RectF
 import android.os.Build
 import android.os.Bundle
@@ -19,35 +20,42 @@ import kotlin.math.sqrt
 import kotlin.properties.Delegates
 
 private const val RESTORE_KEY = "PieChartView#RestoreKey"
-private const val RESTORE_STATE = "PieChartView#RestoreKey#State"
+private const val RESTORE_PIECES = "PieChartView#RestoreKey#Pieces"
+private const val RESTORE_COLORS = "PieChartView#RestoreKey#Colors"
 private const val RESTORE_SELECTED_ID = "PieChartView#RestoreKey#SelectedID"
 
 class PieChartView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : View(context, attrs) {
+    private var colors = emptyList<Int>()
     private val count = Count()
     private val drawer = Drawer()
     private val chartRect = RectF()
 
-    var pieces by Delegates.observable(emptySet<Piece>()) { _, oldValue, newValue ->
-        if (oldValue != newValue) {
-            val newPiePieces = count(context, newValue.toList())
+    var pieces by Delegates.vetoable(emptyList<Piece>()) { _, oldValue, newValue ->
+        val allowed = oldValue != newValue
+        if (allowed) {
+            if (colors.size < newValue.size)
+                colors = ColorsGenerator(newValue.size)
+            val newPiePieces = count(context, newValue.toList(), colors)
             if (newPiePieces != piePieces) {
                 piePieces = newPiePieces
                 invalidate()
             }
         }
+
+        return@vetoable allowed
     }
     var piePieces = emptyList<PiePiece>()
         private set
     var selectedID: Int? = null
         private set
-    var onSectorClickListener: ((PiePiece) -> Unit)? = null
+    var onSectorClickListener: ((PieceInfo) -> Unit)? = null
 
     init {
         if (isInEditMode)
-            pieces = DemoValuesReader.readPieChartValues(context).toSet()
+            pieces = DemoValuesReader.readPieChartValues(context)
     }
 
 
@@ -95,11 +103,14 @@ class PieChartView @JvmOverloads constructor(
             return false
 
         val touchAngle = (Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())) + 360) % 360
+
         selectedID = piePieces
             .indexOfFirst { it.anglesRange.contains(touchAngle) }
             .takeIf { it != -1 }
             ?.also {
-                onSectorClickListener?.invoke(piePieces[it])
+                onSectorClickListener?.invoke(
+                    PieceInfo.from(pieces[it], piePieces[it])
+                )
             }
 
         return selectedID != null
@@ -112,27 +123,30 @@ class PieChartView @JvmOverloads constructor(
     override fun onSaveInstanceState(): Parcelable {
         return bundleOf(
             RESTORE_KEY to super.onSaveInstanceState(),
-            RESTORE_STATE to ArrayList(piePieces),
             RESTORE_SELECTED_ID to selectedID,
+            RESTORE_PIECES to ArrayList(piePieces),
+            RESTORE_COLORS to colors.toIntArray(),
         )
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         if (state is Bundle) {
             val savedData = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                state.getParcelableArrayList(RESTORE_STATE, PiePiece::class.java) else
-                state.getParcelableArrayList(RESTORE_STATE)
+                state.getParcelableArrayList(RESTORE_PIECES, Piece::class.java) else
+                state.getParcelableArrayList(RESTORE_PIECES)
 
             if (savedData != null) {
-                piePieces = savedData
+                colors = state.getIntegerArrayList(RESTORE_COLORS)?.toList() ?: emptyList()
+                pieces = savedData
                 selectedID = state.getInt(RESTORE_SELECTED_ID)
                 selectedID?.let {
-                    val category = savedData[it]
-                    onSectorClickListener?.invoke(category)
-//                    animateSelection(it)
+                    val info = PieceInfo.from(pieces[it], piePieces[it])
+                    onSectorClickListener?.invoke(info)
                 }
             }
-            super.onRestoreInstanceState(state.getParcelable(RESTORE_KEY))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                super.onRestoreInstanceState(state.getParcelable(RESTORE_KEY, Piece::class.java)) else
+                super.onRestoreInstanceState(state.getParcelable(RESTORE_KEY))
         } else {
             super.onRestoreInstanceState(state)
         }
