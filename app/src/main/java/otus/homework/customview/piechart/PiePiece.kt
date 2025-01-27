@@ -10,7 +10,4 @@ data class PiePiece(
 ) {
     val endAngle get() = startAngle + sweepAngle
     val anglesRange get() = startAngle..endAngle
-
-    fun chartedAnglesRange(angleOffset: Float) =
-        (startAngle - angleOffset)..(endAngle - angleOffset)
 }

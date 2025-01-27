@@ -74,9 +74,9 @@ class PieChartView @JvmOverloads constructor(
     //region onTouchEvent
     override fun onTouchEvent(event: MotionEvent) =
         when (event.action) {
-            MotionEvent.ACTION_UP   -> performClick()
+            MotionEvent.ACTION_UP -> performClick()
             MotionEvent.ACTION_DOWN -> handleClickEvent(event.x, event.y)
-            else                    -> super.onTouchEvent(event)
+            else -> super.onTouchEvent(event)
         }
 
     override fun performClick(): Boolean {
@@ -87,31 +87,69 @@ class PieChartView @JvmOverloads constructor(
     private fun handleClickEvent(clickX: Float, clickY: Float): Boolean {
         if (onSectorClickListener == null) return false
 
+        val touchAngle = countTouchAngle(clickX, clickY, width, height, onClickIsOutOfChart = { return false })
+        selectedID = findTouchedPieceID(touchAngle)
+        selectedID?.also {
+            val sortedPieces = pieces.sortedByDescending { it.weight }
+            onSectorClickListener?.invoke(
+                PieceInfo.from(sortedPieces[it], piePieces[it])
+            )
+        }
+        return selectedID != null
+    }
+
+    private inline fun countTouchAngle(
+        clickX: Float,
+        clickY: Float,
+        width: Int,
+        height: Int,
+        onClickIsOutOfChart: () -> Unit
+    ): Double {
+        val (distanceFromCenter, dx, dy, chartArea) = countDistances(clickX, clickY, width, height)
+        val doesTouchPointBelongToChart = distanceFromCenter in chartArea
+
+        if (!doesTouchPointBelongToChart)
+            onClickIsOutOfChart()
+
+        val rawAngle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
+        val shiftedAngle = rawAngle - drawer.startAngle
+        val touchAngle = (shiftedAngle + 360) % 360
+        return touchAngle
+    }
+
+    private fun countDistances(clickX: Float, clickY: Float, width: Int, height: Int): Distances {
         val cx = width / 2f
         val cy = height / 2f
         val dx = clickX - cx
         val dy = cy - clickY
         val distanceFromCenter = sqrt((dx * dx + dy * dy).toDouble()).toFloat()
         val radius = (width / 3f).coerceAtLeast(height / 3f)
+        val strokeWidth = drawer.paint.strokeWidth
         val holeRadius = chartRect.width() / 5f
-
-        if (distanceFromCenter !in holeRadius..radius)
-            return false
-
-        val touchAngle = (Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())) + 360) % 360
-
-        val sortedPieces = pieces.sortedByDescending { it.weight }
-        selectedID = piePieces
-            .indexOfFirst { it.chartedAnglesRange(count.startAngle).contains(touchAngle) }
-            .takeIf { it != -1 }
-            ?.also {
-                onSectorClickListener?.invoke(
-                    PieceInfo.from(sortedPieces[it], piePieces[it])
-                )
-            }
-
-        return selectedID != null
+        val chartArea = (holeRadius - strokeWidth / 2)..(radius + strokeWidth / 2)
+        return Distances(distanceFromCenter, dx, dy, chartArea)
     }
+
+    private data class Distances(
+        val distanceFromCenter: Float,
+        val dx: Float,
+        val dy: Float,
+        val chartArea:  ClosedFloatingPointRange<Float>,
+    )
+
+    private fun findTouchedPieceID(touchAngle: Double): Int? = piePieces
+        .indexOfFirst {
+            val normalizedStart = it.startAngle % 360f
+            val normalizedEnd = (it.startAngle + it.sweepAngle) % 360f
+
+            when {
+                normalizedEnd > normalizedStart ->
+                    touchAngle in normalizedStart..normalizedEnd
+                else ->
+                    touchAngle >= normalizedStart || touchAngle < normalizedEnd
+            }
+        }
+        .takeIf { it != -1 }
 
     //endregion
 

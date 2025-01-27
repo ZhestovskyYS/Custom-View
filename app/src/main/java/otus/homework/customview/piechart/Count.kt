@@ -4,16 +4,16 @@ import android.content.Context
 import android.graphics.Color
 import otus.homework.customview.R
 
+private const val START_ANGLE = 0.0f
 private const val MAX_ANGLE = 360.0f
 private val OTHERS_PLACEHOLDER = R.string.others_placeholder
 
 class Count(
-    val startAngle: Float = -90.0f,
     val thresholdPercent: Float = 0.05f,
     val thresholdPlaceholder: String? = null,
 ) {
     init {
-        require(thresholdPercent < 1.0f && startAngle in -360.0f..360.0f)
+        require(thresholdPercent < 1.0f && START_ANGLE in -MAX_ANGLE..MAX_ANGLE)
     }
 
     operator fun invoke(context: Context, pieces: List<Piece>, colors: List<Int>): List<PiePiece> {
@@ -35,7 +35,7 @@ class Count(
                 name = thresholdPlaceholder ?: context.getString(OTHERS_PLACEHOLDER),
                 color = Color.GRAY,
                 startAngle = meaningPiePieces.last().endAngle,
-                sweepAngle = (MAX_ANGLE + this.startAngle - meaningPiePieces.last().endAngle).toFloat(),
+                sweepAngle = (MAX_ANGLE - meaningPiePieces.last().endAngle) % MAX_ANGLE,
             )
 
             return meaningPiePieces + othersPiece
@@ -48,27 +48,31 @@ class Count(
     private fun mapAllPieces(pieces: List<Piece>, colors: List<Int>, sum: Double): List<PiePiece> {
         pieces.ifEmpty { return emptyList() }
 
-        val piecesWithoutLastOne = pieces - pieces.last()
-        return piecesWithoutLastOne.toPiePieces(colors, sum)
-            .let {
-                it + PiePiece(
-                    name = pieces.last().name,
-                    color = colors[pieces.lastIndex],
-                    startAngle = it.last().endAngle,
-                    sweepAngle = (MAX_ANGLE - it.last().endAngle).toFloat(),
-                )
-            }
+        return pieces.foldIndexed(emptyList<PiePiece>()) { idx, acc, piece ->
+            val sweep = ((piece.weight / sum) * MAX_ANGLE).toFloat()
+            val start = acc.lastOrNull()?.endAngle ?: START_ANGLE
+
+            acc + PiePiece(
+                name = piece.name,
+                color = colors[idx],
+                startAngle = start,
+                sweepAngle = sweep
+            )
+        }
     }
 
     private fun List<Piece>.toPiePieces(colors: List<Int>, sum: Double): List<PiePiece> {
-        var previousItemAngle = startAngle
+        var previousItemAngle = START_ANGLE
         return mapIndexed { index, piece ->
+            val pieceAngle = countPieceAngle(piece.weight, sum)
             PiePiece(
                 name = piece.name,
                 color = colors[index],
                 startAngle = previousItemAngle,
-                sweepAngle = countPieceAngle(piece.weight, sum),
-            ).also { previousItemAngle = it.endAngle }
+                sweepAngle = pieceAngle,
+            ).also {
+                previousItemAngle = ((previousItemAngle + pieceAngle) % MAX_ANGLE + MAX_ANGLE) % MAX_ANGLE
+            }
         }
     }
 

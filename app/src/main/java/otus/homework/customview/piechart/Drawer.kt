@@ -8,6 +8,7 @@ import android.graphics.RectF
 
 class Drawer(
     val paint: Paint = Paint(),
+    val startAngle: Float = -90f,
     private val holePath: Path = Path()
 ) {
     private var lastDrawnRectF: RectF? = null
@@ -23,7 +24,7 @@ class Drawer(
         }
         piePieces.forEach { piece ->
             paint.setColor(piece.color)
-            canvas.drawArc(chartRect, piece.startAngle, piece.sweepAngle, true, paint)
+            canvas.drawArc(chartRect, piece.startAngle + startAngle, piece.sweepAngle, true, paint)
         }
         return canvas
     }
