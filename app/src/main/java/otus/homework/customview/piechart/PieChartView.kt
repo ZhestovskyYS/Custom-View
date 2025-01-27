@@ -2,7 +2,6 @@ package otus.homework.customview.piechart
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Path
 import android.graphics.RectF
 import android.os.Build
 import android.os.Bundle
@@ -11,9 +10,6 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.os.bundleOf
-import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.CoroutineScope
 import otus.homework.customview.DemoValuesReader
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -94,22 +90,23 @@ class PieChartView @JvmOverloads constructor(
         val cx = width / 2f
         val cy = height / 2f
         val dx = clickX - cx
-        val dy = clickY - cy
+        val dy = cy - clickY
         val distanceFromCenter = sqrt((dx * dx + dy * dy).toDouble()).toFloat()
         val radius = (width / 3f).coerceAtLeast(height / 3f)
-        val strokeWidth = drawer.paint.strokeWidth
+        val holeRadius = chartRect.width() / 5f
 
-        if (distanceFromCenter !in (radius - strokeWidth / 2)..(radius + strokeWidth / 2))
+        if (distanceFromCenter !in holeRadius..radius)
             return false
 
         val touchAngle = (Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())) + 360) % 360
 
+        val sortedPieces = pieces.sortedByDescending { it.weight }
         selectedID = piePieces
-            .indexOfFirst { it.anglesRange.contains(touchAngle) }
+            .indexOfFirst { it.chartedAnglesRange(count.startAngle).contains(touchAngle) }
             .takeIf { it != -1 }
             ?.also {
                 onSectorClickListener?.invoke(
-                    PieceInfo.from(pieces[it], piePieces[it])
+                    PieceInfo.from(sortedPieces[it], piePieces[it])
                 )
             }
 

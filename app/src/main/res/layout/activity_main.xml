@@ -9,17 +9,22 @@
     <otus.homework.customview.piechart.PieChartView
         android:id="@+id/pie_chart"
         android:layout_width="0dp"
-        android:layout_height="400dp"
-        app:layout_constraintStart_toEndOf="@id/pie_chart_legend"
+        android:layout_height="300dp"
+        android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/pie_chart_legend"
         app:layout_constraintTop_toTopOf="parent" />
 
     <include
         android:id="@+id/pie_chart_legend"
         layout="@layout/pie_chart_legend"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintBottom_toBottomOf="@id/pie_chart"
+        app:layout_constraintEnd_toStartOf="@id/pie_chart_legend"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/pie_chart"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

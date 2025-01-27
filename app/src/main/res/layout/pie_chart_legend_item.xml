@@ -8,8 +8,8 @@
 
     <ImageView
         android:id="@+id/colorBox"
-        android:layout_width="8dp"
-        android:layout_height="8dp"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
         tools:src="@color/black" />
 
     <TextView
@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:textColor="@color/black"
-        android:textSize="16sp"
+        android:textSize="12sp"
         android:textStyle="italic"
         tools:text="- Android color" />
 

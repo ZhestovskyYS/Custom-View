@@ -35,7 +35,7 @@ class Count(
                 name = thresholdPlaceholder ?: context.getString(OTHERS_PLACEHOLDER),
                 color = Color.GRAY,
                 startAngle = meaningPiePieces.last().endAngle,
-                sweepAngle = (MAX_ANGLE + startAngle - meaningPiePieces.last().endAngle).toFloat(),
+                sweepAngle = (MAX_ANGLE + this.startAngle - meaningPiePieces.last().endAngle).toFloat(),
             )
 
             return meaningPiePieces + othersPiece
