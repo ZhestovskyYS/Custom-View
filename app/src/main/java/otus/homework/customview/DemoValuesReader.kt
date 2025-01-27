@@ -2,8 +2,12 @@ package otus.homework.customview
 
 import android.content.Context
 import org.json.JSONArray
+import otus.homework.customview.linechart.RecordData
 import otus.homework.customview.piechart.Piece
 import java.io.BufferedReader
+import java.util.Date
+
+typealias Record = otus.homework.customview.linechart.Record
 
 object DemoValuesReader {
 
@@ -15,6 +19,35 @@ object DemoValuesReader {
                 weight = it.amount.toFloat(),
             )
         }
+    }
+
+    fun readLineChartValues(context: Context): List<Record> {
+        val payloads = context.readPayloads()
+        val categories = mutableMapOf<String, Record>()
+
+        payloads.forEach {
+            if (categories.containsKey(it.category)) {
+                val record = categories[it.category]!!
+                categories[it.category] = record.copy(
+                    data = record.data + RecordData(
+                        Date(it.time),
+                        it.amount.toDouble()
+                    )
+                )
+            } else {
+                categories[it.category] = Record(
+                    name = it.category,
+                    data = listOf(
+                        RecordData(
+                            Date(it.time),
+                            it.amount.toDouble()
+                        )
+                    )
+                )
+            }
+        }
+
+        return categories.values.toList()
     }
 
 

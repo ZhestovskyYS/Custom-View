@@ -63,6 +63,13 @@ class PieChartView @JvmOverloads constructor(
         setMeasuredDimension(width, height)
     }
 
+    private fun updateRectSize(width: Int, height: Int) {
+        val radius = (width / 3f).coerceAtMost(height / 3f)
+        val cx = width / 2f
+        val cy = height / 2f
+        chartRect.set(cx - radius, cy - radius, cx + radius, cy + radius)
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (piePieces.isEmpty()) return
@@ -187,11 +194,4 @@ class PieChartView @JvmOverloads constructor(
         }
     }
     //endregion
-
-    private fun updateRectSize(width: Int, height: Int) {
-        val radius = (width / 3f).coerceAtMost(height / 3f)
-        val cx = width / 2f
-        val cy = height / 2f
-        chartRect.set(cx - radius, cy - radius, cx + radius, cy + radius)
-    }
 }
