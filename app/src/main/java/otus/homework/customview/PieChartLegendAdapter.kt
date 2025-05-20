@@ -5,8 +5,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import otus.homework.customview.databinding.PieChartLegendItemBinding
 import otus.homework.customview.piechart.PiePiece
-import otus.homework.customview.piechart.Piece
-import otus.homework.customview.piechart.PieceInfo
 
 class PieChartLegendAdapter(
     private val legendInfo: List<PiePiece>

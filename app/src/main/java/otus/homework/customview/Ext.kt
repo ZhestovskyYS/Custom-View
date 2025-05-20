@@ -9,3 +9,10 @@ val Number.dp: Float
         this.toFloat(),
         Resources.getSystem().displayMetrics
     )
+
+val Number.sp: Float
+    get() = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_SP,
+        this.toFloat(),
+        Resources.getSystem().displayMetrics
+    )

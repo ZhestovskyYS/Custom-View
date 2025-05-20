@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
     private var _binding: ActivityMainBinding? = null
     private val binding get() = _binding!!
     private var pieChartInfo: List<Piece> = emptyList()
+    private var lineChartInfo: List<Record> = emptyList()
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +22,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         pieChartInfo = DemoValuesReader.readPieChartValues(this)
+        lineChartInfo = DemoValuesReader.readLineChartValues(this)
 
         binding.pieChart.pieces = pieChartInfo
         binding.pieChart.onSectorClickListener = { piece ->
@@ -34,6 +36,8 @@ class MainActivity : AppCompatActivity() {
             layoutManager = GridLayoutManager(this@MainActivity, 2)
             adapter = PieChartLegendAdapter(binding.pieChart.piePieces)
         }
+
+        binding.lineChart.records = lineChartInfo
     }
 
     override fun onDestroy() {
